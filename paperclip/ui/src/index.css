@@ -175,6 +175,22 @@
   }
 }
 
+@keyframes daodun-risk-sprite {
+  from {
+    background-position: 0 var(--daodun-row-y);
+  }
+  to {
+    background-position: var(--daodun-end-x) var(--daodun-row-y);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daodun-risk-sprite {
+    animation: none !important;
+    background-position: 0 var(--daodun-row-y) !important;
+  }
+}
+
 @media (pointer: coarse) {
   button,
   [role="button"],
