@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BrainCircuit, CircleDollarSign, FileText, Play, ShieldCheck, TrendingUp } from "lucide-react";
+import { AlertCircle, ArrowRight, BrainCircuit, CheckCircle2, CircleDollarSign, FileText, Play, ShieldCheck, TrendingUp } from "lucide-react";
+import { Link } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { financeApi } from "../api/finance";
@@ -55,38 +56,33 @@ export function FinanceHome() {
     () => (agentQuery.data ?? []).filter((agent) => agent.status !== "terminated"),
     [agentQuery.data],
   );
+  const recentDecisionQuery = useQuery({
+    queryKey: company && bootstrapQuery.data?.projectId
+      ? queryKeys.issues.listByProject(company.id, bootstrapQuery.data.projectId)
+      : ["issues", "finance", "recent", "pending"],
+    queryFn: () => issuesApi.list(company!.id, { projectId: bootstrapQuery.data!.projectId, limit: 6 }),
+    enabled: Boolean(company && bootstrapQuery.data?.projectId),
+    staleTime: 15_000,
+  });
+  const recentDecisions = useMemo(
+    () => [...(recentDecisionQuery.data ?? [])]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 4),
+    [recentDecisionQuery.data],
+  );
 
   const createIssueMutation = useMutation({
     mutationFn: async () => {
-      if (!company || !bootstrapQuery.data?.projectId || !bootstrapQuery.data.goalId) {
-        throw new Error("工作空间还没有准备好");
-      }
       const title = goalText.trim();
       if (!title) throw new Error("请先输入你的决策目标");
-      const issue = await issuesApi.create(company.id, {
-        title,
-        description: [
-          "这是 Finance Anything 的用户决策目标。",
-          "",
-          "请多 Agent 协同完成信息采集、证据校验、替代方案、成本收益、风险、场景模拟、反方辩论、二手价值分析，并由决策报告 Agent 输出最终决策报告。",
-          "",
-          "最终报告要求：必须生成一份可打开的 HTML 报告文件并上传到本目标，报告需要综合各 Agent 结论、关键证据、分歧、评分、风险控制、执行条件和复盘计划。",
-        ].join("\n"),
-        status: "todo",
-        priority: "high",
-        assigneeAgentId: bootstrapQuery.data.defaultAgentId,
-        projectId: bootstrapQuery.data.projectId,
-        goalId: bootstrapQuery.data.goalId,
-      });
-      return issue;
+      return financeApi.startDecision({ goal: title });
     },
-    onSuccess: async (issue) => {
+    onSuccess: async (result) => {
       setError(null);
-      if (company) {
-        await queryClient.invalidateQueries({ queryKey: queryKeys.issues.list(company.id) });
-        await queryClient.invalidateQueries({ queryKey: queryKeys.liveRuns(company.id) });
-      }
-      navigate(`/issues/${issue.identifier ?? issue.id}`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.issues.list(result.company.id) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.issues.listByProject(result.company.id, result.projectId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.liveRuns(result.company.id) });
+      navigate(result.issuePath);
     },
     onError: (err) => {
       setError(err instanceof Error ? err.message : "启动失败，请稍后重试");
@@ -125,42 +121,39 @@ export function FinanceHome() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-0 pb-2 pt-1 sm:gap-6 sm:px-4 sm:py-6 lg:px-6">
-        <header className="flex flex-col gap-4 border-b border-border px-1 pb-4 sm:px-0 sm:pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CircleDollarSign className="h-4 w-4 text-emerald-500" />
-              <span>Finance Anything</span>
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-0 pb-4 pt-1 sm:px-4 sm:py-6 lg:px-6">
+        <section className="rounded-md border border-border bg-card p-4 sm:p-7">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CircleDollarSign className="h-4 w-4 text-emerald-500" />
+                <span>Finance Anything</span>
+              </div>
+              <h1 className="mt-3 text-2xl font-semibold tracking-normal sm:text-3xl">你现在要决策什么？</h1>
             </div>
-            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">万能决策助手</h1>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-3">
-            <div className="col-span-2 rounded-md border border-border px-3 py-2 md:col-span-1">
-              <div className="text-muted-foreground">工作空间</div>
-              <div className="mt-1 break-words font-medium leading-snug">{company?.name ?? "准备中"}</div>
-            </div>
-            <div className="rounded-md border border-border px-3 py-2">
-              <div className="text-muted-foreground">协同团队</div>
-              <div className="mt-1 font-medium leading-snug">{formatAgentCount(bootstrapQuery.data?.agentCount)}</div>
-            </div>
-            <div className="rounded-md border border-border px-3 py-2">
-              <div className="text-muted-foreground">状态</div>
-              <div className="mt-1 font-medium">可启动</div>
+            <div className="grid grid-cols-2 gap-2 text-sm sm:min-w-[280px]">
+              <div className="rounded-md border border-border px-3 py-2">
+                <div className="text-muted-foreground">协同团队</div>
+                <div className="mt-1 font-medium leading-snug">{formatAgentCount(bootstrapQuery.data?.agentCount)}</div>
+              </div>
+              <div className="rounded-md border border-border px-3 py-2">
+                <div className="text-muted-foreground">状态</div>
+                <div className="mt-1 font-medium">可启动</div>
+              </div>
             </div>
           </div>
-        </header>
 
-        <main className="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="rounded-md border border-border bg-card p-4 sm:p-5">
+          <div className="rounded-md border border-border/80 bg-background/60 p-3 sm:p-4">
             <div className="mb-3 flex items-center gap-2">
               <BrainCircuit className="h-4 w-4 text-cyan-500" />
               <h2 className="text-base font-semibold">提出一个目标</h2>
             </div>
             <Textarea
+              id="finance-decision-input"
               value={goalText}
               onChange={(event) => setGoalText(event.target.value)}
-              placeholder="例如：我是否应该在这个价格买入特斯拉股票？"
-              className="min-h-36 resize-none text-base sm:min-h-40"
+              placeholder="例如：我是否应该在这个价格买入特斯拉股票？预算、时间、风险偏好也可以一起写。"
+              className="min-h-44 resize-none text-base sm:min-h-52"
             />
             <div className="mt-3 flex flex-wrap gap-2">
               {EXAMPLE_GOALS.map((item) => (
@@ -189,15 +182,71 @@ export function FinanceHome() {
                 {createIssueMutation.isPending ? "启动中..." : "开始决策"}
               </Button>
             </div>
+          </div>
+        </section>
+
+        <main className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <section className="rounded-md border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <h2 className="text-sm font-semibold">最近决策</h2>
+              </div>
+              <Link to="/issues" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                全部
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <div className="mt-3 divide-y divide-border overflow-hidden rounded-md border border-border/70">
+              {recentDecisions.length > 0 ? recentDecisions.map((issue) => (
+                <Link
+                  key={issue.id}
+                  to={`/issues/${issue.identifier ?? issue.id}`}
+                  className="block px-3 py-3 text-sm transition hover:bg-accent/50"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="line-clamp-2 font-medium">{issue.title}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{issue.identifier ?? issue.id.slice(0, 8)}</div>
+                    </div>
+                    <span className="shrink-0 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
+                      {issue.status === "todo" ? "排队中" : issue.status === "in_progress" ? "进行中" : issue.status === "done" ? "已完成" : issue.status}
+                    </span>
+                  </div>
+                </Link>
+              )) : (
+                <div className="px-3 py-4 text-sm text-muted-foreground">还没有决策记录。</div>
+              )}
+            </div>
           </section>
 
           <aside className="space-y-3 pb-2">
             <div className="rounded-md border border-border bg-card p-4">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-amber-500" />
+                <h2 className="text-sm font-semibold">协同方式</h2>
+              </div>
+              <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <div className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>信息采集、证据校验、风险、替代方案并行展开。</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-cyan-500" />
+                  <span>股票、商品、二手价值等专项 Agent 按目标介入。</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-amber-500" />
+                  <span>最终报告 Agent 汇总为 HTML 决策报告。</span>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-md border border-border bg-card p-4">
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="h-4 w-4 text-cyan-500" />
                 <h2 className="text-sm font-semibold">协同 Agent</h2>
               </div>
-              <div className="mt-3 max-h-none space-y-2 overflow-visible pr-0 sm:max-h-[360px] sm:overflow-auto sm:pr-1">
+              <div className="mt-3 max-h-none space-y-2 overflow-visible pr-0 lg:max-h-[320px] lg:overflow-auto lg:pr-1">
                 {readyAgents.length > 0 ? readyAgents.map((agent) => (
                   <div key={agent.id} className="flex items-start gap-2 rounded-md border border-border/70 px-3 py-2">
                     <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />

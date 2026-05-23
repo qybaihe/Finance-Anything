@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { NavLink, useLocation } from "@/lib/router";
+import { NavLink, useLocation, useNavigate } from "@/lib/router";
 import {
   BrainCircuit,
   House,
@@ -41,6 +41,7 @@ type MobileNavItem = MobileNavLinkItem | MobileNavActionItem;
 
 export function MobileBottomNav({ visible }: MobileBottomNavProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { selectedCompanyId } = useCompany();
   const { openNewIssue } = useDialogActions();
   const { t } = useLanguage();
@@ -54,22 +55,46 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
   const financeEnabled = financeStatusQuery.data?.enabled === true;
 
   const items = useMemo<MobileNavItem[]>(
-    () => [
-      financeEnabled
-        ? { type: "link", to: "/finance", label: t("Decision Workbench"), icon: BrainCircuit }
-        : { type: "link", to: "/dashboard", label: t("Home"), icon: House },
-      { type: "link", to: "/issues", label: t("Issues"), icon: CircleDot },
-      { type: "action", label: t("Create"), icon: SquarePen, onClick: () => openNewIssue() },
-      { type: "link", to: "/agents/all", label: t("Agents"), icon: Users },
-      {
-        type: "link",
-        to: "/inbox",
-        label: t("Inbox"),
-        icon: Inbox,
-        badge: inboxBadge.inbox,
-      },
-    ],
-    [financeEnabled, openNewIssue, inboxBadge.inbox, t],
+    () => {
+      if (financeEnabled) {
+        return [
+          { type: "link", to: "/finance", label: t("Decision Workbench"), icon: BrainCircuit },
+          { type: "link", to: "/issues", label: t("Decision History"), icon: CircleDot },
+          {
+            type: "action",
+            label: t("Ask"),
+            icon: SquarePen,
+            onClick: () => {
+              navigate("/finance");
+              window.setTimeout(() => document.getElementById("finance-decision-input")?.focus(), 50);
+            },
+          },
+          { type: "link", to: "/agents/all", label: t("Agents"), icon: Users },
+          {
+            type: "link",
+            to: "/inbox",
+            label: t("Inbox"),
+            icon: Inbox,
+            badge: inboxBadge.inbox,
+          },
+        ];
+      }
+
+      return [
+        { type: "link", to: "/dashboard", label: t("Home"), icon: House },
+        { type: "link", to: "/issues", label: t("Issues"), icon: CircleDot },
+        { type: "action", label: t("Create"), icon: SquarePen, onClick: () => openNewIssue() },
+        { type: "link", to: "/agents/all", label: t("Agents"), icon: Users },
+        {
+          type: "link",
+          to: "/inbox",
+          label: t("Inbox"),
+          icon: Inbox,
+          badge: inboxBadge.inbox,
+        },
+      ];
+    },
+    [financeEnabled, navigate, openNewIssue, inboxBadge.inbox, t],
   );
 
   return (

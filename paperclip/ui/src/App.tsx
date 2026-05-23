@@ -73,7 +73,7 @@ function boardRoutes() {
     <>
       <Route index element={<CompanyIndexRedirect />} />
       <Route path="finance" element={<FinanceHome />} />
-      <Route path="dashboard" element={<Dashboard />} />
+      <Route path="dashboard" element={<FinanceAwareDashboard />} />
       <Route path="dashboard/live" element={<DashboardLive />} />
       <Route path="onboarding" element={<OnboardingRoutePage />} />
       <Route path="companies" element={<Companies />} />
@@ -176,6 +176,23 @@ function CompanyIndexRedirect() {
     return <Navigate to="finance" replace />;
   }
   return <Navigate to="dashboard" replace />;
+}
+
+function FinanceAwareDashboard() {
+  const statusQuery = useQuery({
+    queryKey: queryKeys.finance.status,
+    queryFn: () => financeApi.status(),
+    retry: false,
+    staleTime: 30_000,
+  });
+
+  if (statusQuery.isLoading) {
+    return <div className="mx-auto max-w-xl py-10 text-sm text-muted-foreground">正在加载...</div>;
+  }
+  if (statusQuery.data?.enabled) {
+    return <FinanceHome />;
+  }
+  return <Dashboard />;
 }
 
 function LegacySettingsRedirect() {
@@ -287,14 +304,54 @@ function CompanyRootRedirect() {
 
 function UnprefixedBoardRedirect() {
   const location = useLocation();
-  const { companies, selectedCompany, loading } = useCompany();
+  const { companies, selectedCompany, loading, setSelectedCompanyId } = useCompany();
+  const queryClient = useQueryClient();
+  const financeStatus = useQuery({
+    queryKey: queryKeys.finance.status,
+    queryFn: () => financeApi.status(),
+    retry: false,
+    staleTime: 30_000,
+  });
+  const bootstrapMutation = useMutation({
+    mutationFn: () => financeApi.bootstrap(),
+    onSuccess: async (result) => {
+      setSelectedCompanyId(result.company.id, { source: "bootstrap" });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.finance.bootstrap });
+    },
+  });
 
-  if (loading) {
+  const targetCompany = selectedCompany ?? companies[0] ?? null;
+  const financeEnabled = financeStatus.data?.enabled === true;
+
+  useEffect(() => {
+    if (!financeEnabled || loading || targetCompany || bootstrapMutation.isPending || bootstrapMutation.data) return;
+    bootstrapMutation.mutate();
+  }, [bootstrapMutation, financeEnabled, loading, targetCompany]);
+
+  if (loading || financeStatus.isLoading) {
     return <div className="mx-auto max-w-xl py-10 text-sm text-muted-foreground">Loading...</div>;
   }
 
-  const targetCompany = selectedCompany ?? companies[0] ?? null;
+  if (financeEnabled && bootstrapMutation.data?.company) {
+    return (
+      <Navigate
+        to={`/${bootstrapMutation.data.company.issuePrefix}${location.pathname}${location.search}${location.hash}`}
+        replace
+      />
+    );
+  }
+
   if (!targetCompany) {
+    if (financeEnabled) {
+      return (
+        <div className="mx-auto max-w-xl py-10 text-sm text-muted-foreground">
+          {bootstrapMutation.isError
+            ? "Finance Anything 工作空间创建失败，请刷新后重试。"
+            : "正在创建 Finance Anything 工作空间..."}
+        </div>
+      );
+    }
     if (
       shouldRedirectCompanylessRouteToOnboarding({
         pathname: location.pathname,
@@ -359,6 +416,8 @@ export function App() {
             <Route path="adapters" element={<AdapterManager />} />
           </Route>
           <Route path="companies" element={<UnprefixedBoardRedirect />} />
+          <Route path="dashboard" element={<UnprefixedBoardRedirect />} />
+          <Route path="dashboard/live" element={<UnprefixedBoardRedirect />} />
           <Route path="issues" element={<UnprefixedBoardRedirect />} />
           <Route path="issues/:issueId" element={<UnprefixedBoardRedirect />} />
           <Route path="routines" element={<UnprefixedBoardRedirect />} />

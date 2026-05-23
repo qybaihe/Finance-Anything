@@ -220,7 +220,8 @@ export function Layout() {
     }
     lastMainScrollTop.current = 0;
     setMobileNavVisible(true);
-  }, [isMobile]);
+    setSidebarOpen(false);
+  }, [isMobile, setSidebarOpen]);
 
   // Swipe gesture to open/close sidebar on mobile
   useEffect(() => {

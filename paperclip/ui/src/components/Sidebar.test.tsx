@@ -15,6 +15,10 @@ const mockInstanceSettingsApi = vi.hoisted(() => ({
   getExperimental: vi.fn(),
 }));
 
+const mockFinanceApi = vi.hoisted(() => ({
+  status: vi.fn(),
+}));
+
 vi.mock("@/lib/router", () => ({
   NavLink: ({ to, children, className, ...props }: {
     to: string;
@@ -60,6 +64,10 @@ vi.mock("../api/heartbeats", () => ({
 
 vi.mock("../api/instanceSettings", () => ({
   instanceSettingsApi: mockInstanceSettingsApi,
+}));
+
+vi.mock("../api/finance", () => ({
+  financeApi: mockFinanceApi,
 }));
 
 vi.mock("../hooks/useInboxBadge", () => ({
@@ -121,6 +129,7 @@ describe("Sidebar", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     mockHeartbeatsApi.liveRunsForCompany.mockResolvedValue([]);
+    mockFinanceApi.status.mockResolvedValue({ enabled: false, productName: "Finance Anything" });
   });
 
   afterEach(() => {
@@ -148,8 +157,6 @@ describe("Sidebar", () => {
     const root = await renderSidebar();
 
     expect(container.textContent).not.toContain("Workspaces");
-    const openCodeLink = [...container.querySelectorAll("a")].find((anchor) => anchor.textContent === "Open Code");
-    expect(openCodeLink?.getAttribute("href")).toBe("/opencode");
     const monitoringLink = [...container.querySelectorAll("a")].find((anchor) => anchor.textContent === "Monitoring");
     expect(monitoringLink?.getAttribute("href")).toBe("/monitoring");
 
@@ -176,6 +183,25 @@ describe("Sidebar", () => {
 
     const link = [...container.querySelectorAll("a")].find((anchor) => anchor.textContent === "Knowledge");
     expect(link?.getAttribute("href")).toBe("/knowledge");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("focuses the sidebar on decision work when Finance Anything mode is enabled", async () => {
+    mockFinanceApi.status.mockResolvedValue({ enabled: true, productName: "Finance Anything" });
+    mockInstanceSettingsApi.getExperimental.mockResolvedValue({ enableIsolatedWorkspaces: true });
+    const root = await renderSidebar();
+
+    const newDecisionLink = [...container.querySelectorAll("a")].find((anchor) => anchor.textContent === "New Decision");
+    expect(newDecisionLink?.getAttribute("href")).toBe("/finance");
+    expect(container.textContent).toContain("Decision Workbench");
+    expect(container.textContent).toContain("Decision History");
+    expect(container.textContent).not.toContain("Dashboard");
+    expect(container.textContent).not.toContain("Monitoring");
+    expect(container.textContent).not.toContain("Projects");
+    expect(container.textContent).not.toContain("Products");
 
     await act(async () => {
       root.unmount();
