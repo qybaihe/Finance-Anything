@@ -88,13 +88,6 @@ export function Sidebar() {
 
         <nav className="scrollbar-auto-hide flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-2">
           <div className="flex flex-col gap-0.5">
-            <NavLink
-              to="/finance"
-              className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-            >
-              <SquarePen className="h-4 w-4 shrink-0" />
-              <span className="truncate">{t("New Decision")}</span>
-            </NavLink>
             <SidebarNavItem to="/finance" label={t("Decision Workbench")} icon={BrainCircuit} liveCount={liveRunCount} />
             <SidebarNavItem to="/credit-risk" label="信用风控" icon={ShieldCheck} />
             <SidebarNavItem to="/issues" label={t("Decision History")} icon={CircleDot} />
