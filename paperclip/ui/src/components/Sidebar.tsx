@@ -9,6 +9,7 @@ import {
   DollarSign,
   History,
   Search,
+  ShieldCheck,
   SquarePen,
   Network,
   Boxes,
@@ -95,6 +96,7 @@ export function Sidebar() {
               <span className="truncate">{t("New Decision")}</span>
             </NavLink>
             <SidebarNavItem to="/finance" label={t("Decision Workbench")} icon={BrainCircuit} liveCount={liveRunCount} />
+            <SidebarNavItem to="/credit-risk" label="信用风控" icon={ShieldCheck} />
             <SidebarNavItem to="/issues" label={t("Decision History")} icon={CircleDot} />
             <SidebarNavItem to="/agents/all" label={t("Agents")} icon={Users} />
             <SidebarNavItem

@@ -119,7 +119,7 @@ export function CreditRiskPet({ snapshot, variant = "card", className }: CreditR
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-sm font-medium">
             <Bot className="h-3.5 w-3.5 text-cyan-600" />
-            <span className="truncate">DaoDun 主角色</span>
+            <span className="truncate">DaoDun 风险哨兵</span>
           </div>
           <div className="mt-0.5 truncate text-xs text-muted-foreground">
             {copy.headline} · 风险分 {snapshot.riskScore}
@@ -130,13 +130,13 @@ export function CreditRiskPet({ snapshot, variant = "card", className }: CreditR
   }
 
   return (
-    <aside className={cn("rounded-md border border-border bg-card p-4", className)}>
+    <aside className={cn("min-w-0 rounded-md border border-border bg-card p-4", className)}>
       <div className="flex items-start gap-3">
         <PetAvatar snapshot={snapshot} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Bot className="h-4 w-4 text-cyan-600" />
-            <h2 className="text-sm font-semibold">DaoDun 信用守护</h2>
+            <h2 className="text-sm font-semibold">DaoDun 风险哨兵</h2>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs", copy.badgeClassName)}>
@@ -168,7 +168,7 @@ export function CreditRiskPet({ snapshot, variant = "card", className }: CreditR
       </div>
 
       <div className="mt-4 rounded-md border border-border px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-        提问时默认带入还款墙、现金缓冲和风险容量，帮助 Agent 给出有边界的结论。
+        守护状态由还款墙、现金缓冲、风险容量和 Agent 结论共同驱动。
       </div>
     </aside>
   );

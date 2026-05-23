@@ -114,16 +114,19 @@ export function CreditRiskCalendarWall({ items, snapshot }: CreditRiskCalendarWa
   const keyDates = items
     .filter((item) => item.kind === "repayment_due" || item.kind === "risk_warning")
     .slice(0, 3);
+  const mobileTimelineItems = [...items]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 8);
 
   return (
-    <section className="rounded-md border border-border bg-card p-4">
+    <section className="min-w-0 rounded-md border border-border bg-card p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-cyan-600" />
             <h2 className="text-sm font-semibold">信用风控日历墙</h2>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">近 5 周 · 当前评估</p>
+          <p className="mt-1 break-words text-xs text-muted-foreground">近 5 周窗口 · 还款、预警和 Agent 结论统一落点</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {Object.entries(kindConfig).map(([kind, config]) => (
@@ -135,7 +138,34 @@ export function CreditRiskCalendarWall({ items, snapshot }: CreditRiskCalendarWa
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-7 gap-px overflow-hidden rounded-md border border-border bg-border">
+      <div className="mt-4 space-y-2 sm:hidden">
+        {mobileTimelineItems.map((item) => {
+          const config = kindConfig[item.kind];
+          const Icon = config.icon;
+          return (
+            <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-md border border-border px-3 py-2">
+              <div className="w-12 shrink-0 text-center">
+                <div className="text-sm font-semibold tabular-nums">{formatRiskDateLabel(item.date)}</div>
+                <div className="mt-0.5 text-[10px] text-muted-foreground">{config.label}</div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <div className="truncate text-sm font-medium">{item.title}</div>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                  <span className={cn("rounded-md border px-1.5 py-0.5", config.className)}>
+                    {severityConfig[item.severity].label}严重度
+                  </span>
+                  {item.amountCents !== undefined ? <span>{formatRiskCurrency(item.amountCents, item.currency)}</span> : null}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 hidden grid-cols-7 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid">
         {weekdayLabels.map((label) => (
           <div key={label} className="bg-muted px-1 py-2 text-center text-[11px] font-medium text-muted-foreground">
             {label}
@@ -182,7 +212,7 @@ export function CreditRiskCalendarWall({ items, snapshot }: CreditRiskCalendarWa
         })}
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="mt-4 hidden gap-2 sm:grid sm:grid-cols-3">
         {keyDates.map((item) => {
           const config = kindConfig[item.kind];
           const Icon = config.icon;
@@ -203,7 +233,7 @@ export function CreditRiskCalendarWall({ items, snapshot }: CreditRiskCalendarWa
 
       <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-        <span>标志按还款、预警、Agent 结论、额度和提醒区分，严重程度用细边框提示。</span>
+        <span>当前评估：标志按类型区分，严重程度用细边框提示。</span>
       </div>
     </section>
   );

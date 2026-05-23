@@ -5,6 +5,7 @@ import {
   BrainCircuit,
   House,
   CircleDot,
+  ShieldCheck,
   SquarePen,
   Users,
   Inbox,
@@ -59,7 +60,7 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
       if (financeEnabled) {
         return [
           { type: "link", to: "/finance", label: t("Decision Workbench"), icon: BrainCircuit },
-          { type: "link", to: "/issues", label: t("Decision History"), icon: CircleDot },
+          { type: "link", to: "/credit-risk", label: "风控", icon: ShieldCheck },
           {
             type: "action",
             label: t("Ask"),
@@ -69,7 +70,7 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
               window.setTimeout(() => document.getElementById("finance-decision-input")?.focus(), 50);
             },
           },
-          { type: "link", to: "/agents/all", label: t("Agents"), icon: Users },
+          { type: "link", to: "/issues", label: t("Decision History"), icon: CircleDot },
           {
             type: "link",
             to: "/inbox",

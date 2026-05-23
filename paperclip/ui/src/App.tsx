@@ -34,6 +34,7 @@ import { Costs } from "./pages/Costs";
 import { Activity } from "./pages/Activity";
 import { Inbox } from "./pages/Inbox";
 import { FinanceHome } from "./pages/FinanceHome";
+import { FinanceRiskWorkbench } from "./pages/FinanceRiskWorkbench";
 import { CompanySettings } from "./pages/CompanySettings";
 import { CompanyEnvironments } from "./pages/CompanyEnvironments";
 import { CompanyAccess } from "./pages/CompanyAccess";
@@ -73,6 +74,7 @@ function boardRoutes() {
     <>
       <Route index element={<CompanyIndexRedirect />} />
       <Route path="finance" element={<FinanceHome />} />
+      <Route path="credit-risk" element={<FinanceRiskWorkbench />} />
       <Route path="dashboard" element={<FinanceAwareDashboard />} />
       <Route path="dashboard/live" element={<DashboardLive />} />
       <Route path="onboarding" element={<OnboardingRoutePage />} />
@@ -417,6 +419,7 @@ export function App() {
           </Route>
           <Route path="companies" element={<UnprefixedBoardRedirect />} />
           <Route path="finance" element={<UnprefixedBoardRedirect />} />
+          <Route path="credit-risk" element={<UnprefixedBoardRedirect />} />
           <Route path="dashboard" element={<UnprefixedBoardRedirect />} />
           <Route path="dashboard/live" element={<UnprefixedBoardRedirect />} />
           <Route path="issues" element={<UnprefixedBoardRedirect />} />

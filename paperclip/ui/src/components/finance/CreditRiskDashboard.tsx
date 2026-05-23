@@ -24,7 +24,7 @@ const toneClassName: Record<NonNullable<MetricProps["tone"]>, string> = {
 
 function Metric({ label, value, detail, icon: Icon, tone = "default" }: MetricProps) {
   return (
-    <div className="min-w-0 border border-border px-3 py-3">
+    <div className="min-w-0 px-3 py-3">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className={cn("h-3.5 w-3.5", toneClassName[tone])} />
         <span className="truncate">{label}</span>
@@ -151,7 +151,7 @@ export function CreditRiskDashboard({ snapshot }: CreditRiskDashboardProps) {
       : "good";
 
   return (
-    <section className="rounded-md border border-border bg-card p-4">
+    <section className="min-w-0 rounded-md border border-border bg-card p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -165,54 +165,56 @@ export function CreditRiskDashboard({ snapshot }: CreditRiskDashboardProps) {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-        <Metric
-          label="资产"
-          value={formatRiskCurrency(snapshot.totalAssetsCents)}
-          detail={`流动 ${formatRiskCurrency(snapshot.liquidAssetsCents)}`}
-          icon={CircleDollarSign}
-          tone="good"
-        />
-        <Metric
-          label="负债"
-          value={formatRiskCurrency(snapshot.totalLiabilitiesCents)}
-          detail={`负债率 ${formatRiskPercent(snapshot.debtToAssetRatio)}`}
-          icon={Landmark}
-          tone={snapshot.debtToAssetRatio > 0.5 ? "danger" : "default"}
-        />
-        <Metric
-          label="流动性缓冲"
-          value={`${snapshot.bufferMonths.toFixed(1)} 个月`}
-          detail={formatRiskCurrency(snapshot.liquidAssetsCents)}
-          icon={WalletCards}
-          tone={snapshot.bufferMonths < 3 ? "watch" : "good"}
-        />
-        <Metric
-          label="未来 30 天还款"
-          value={formatRiskCurrency(snapshot.future30DayRepaymentCents)}
-          detail={`收入占比 ${formatRiskPercent(snapshot.repaymentPressureRatio)}`}
-          icon={Banknote}
-          tone={snapshot.repaymentPressureRatio > 0.4 ? "watch" : "default"}
-        />
-        <Metric
-          label="可承受风险额度"
-          value={formatRiskCurrency(snapshot.riskCapacityCents)}
-          detail="流动资产折扣后估算"
-          icon={Gauge}
-          tone={capacityTone}
-        />
+      <div className="mt-4 overflow-hidden rounded-md border border-border">
+        <div className="grid divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-5">
+          <Metric
+            label="资产"
+            value={formatRiskCurrency(snapshot.totalAssetsCents)}
+            detail={`流动 ${formatRiskCurrency(snapshot.liquidAssetsCents)}`}
+            icon={CircleDollarSign}
+            tone="good"
+          />
+          <Metric
+            label="负债"
+            value={formatRiskCurrency(snapshot.totalLiabilitiesCents)}
+            detail={`负债率 ${formatRiskPercent(snapshot.debtToAssetRatio)}`}
+            icon={Landmark}
+            tone={snapshot.debtToAssetRatio > 0.5 ? "danger" : "default"}
+          />
+          <Metric
+            label="流动性缓冲"
+            value={`${snapshot.bufferMonths.toFixed(1)} 个月`}
+            detail={formatRiskCurrency(snapshot.liquidAssetsCents)}
+            icon={WalletCards}
+            tone={snapshot.bufferMonths < 3 ? "watch" : "good"}
+          />
+          <Metric
+            label="未来 30 天还款"
+            value={formatRiskCurrency(snapshot.future30DayRepaymentCents)}
+            detail={`收入占比 ${formatRiskPercent(snapshot.repaymentPressureRatio)}`}
+            icon={Banknote}
+            tone={snapshot.repaymentPressureRatio > 0.4 ? "watch" : "default"}
+          />
+          <Metric
+            label="可承受风险额度"
+            value={formatRiskCurrency(snapshot.riskCapacityCents)}
+            detail="流动资产折扣后估算"
+            icon={Gauge}
+            tone={capacityTone}
+          />
+        </div>
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="min-w-0 border border-border p-3">
+        <div className="min-w-0 rounded-md bg-muted/30 p-3">
           <AssetStack snapshot={snapshot} />
         </div>
-        <div className="min-w-0 border border-border p-3">
+        <div className="min-w-0 rounded-md bg-muted/30 p-3">
           <CapacityBar snapshot={snapshot} />
         </div>
       </div>
 
-      <div className="mt-4 border border-border p-3">
+      <div className="mt-4 rounded-md bg-muted/30 p-3">
         <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
           <Activity className="h-3.5 w-3.5 text-cyan-600" />
           <span>还款压力和现金缓冲用于给决策问题设定风险边界。</span>

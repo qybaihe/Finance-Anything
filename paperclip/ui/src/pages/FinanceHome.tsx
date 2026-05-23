@@ -7,10 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { financeApi } from "../api/finance";
 import { agentsApi } from "../api/agents";
 import { issuesApi } from "../api/issues";
-import { CreditRiskCalendarWall } from "../components/finance/CreditRiskCalendarWall";
-import { CreditRiskDashboard } from "../components/finance/CreditRiskDashboard";
-import { CreditRiskPet } from "../components/finance/CreditRiskPet";
-import { buildCreditRiskWorkspace } from "../components/finance/creditRiskMock";
 import { useCompany } from "../context/CompanyContext";
 import { useNavigate } from "../lib/router";
 import { queryKeys } from "../lib/queryKeys";
@@ -73,10 +69,6 @@ export function FinanceHome() {
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 4),
     [recentDecisionQuery.data],
-  );
-  const creditRiskWorkspace = useMemo(
-    () => buildCreditRiskWorkspace(recentDecisions),
-    [recentDecisions],
   );
 
   const createIssueMutation = useMutation({
@@ -152,12 +144,9 @@ export function FinanceHome() {
           </div>
 
           <div className="rounded-md border border-border/80 bg-background/60 p-3 sm:p-4">
-            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <BrainCircuit className="h-4 w-4 text-cyan-500" />
-                <h2 className="text-base font-semibold">提出一个目标</h2>
-              </div>
-              <CreditRiskPet snapshot={creditRiskWorkspace.snapshot} variant="inline" className="sm:max-w-[360px]" />
+            <div className="mb-3 flex items-center gap-2">
+              <BrainCircuit className="h-4 w-4 text-cyan-500" />
+              <h2 className="text-base font-semibold">提出一个目标</h2>
             </div>
             <Textarea
               id="finance-decision-input"
@@ -195,16 +184,6 @@ export function FinanceHome() {
             </div>
           </div>
         </section>
-
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <CreditRiskCalendarWall
-            items={creditRiskWorkspace.calendarItems}
-            snapshot={creditRiskWorkspace.snapshot}
-          />
-          <CreditRiskPet snapshot={creditRiskWorkspace.snapshot} />
-        </section>
-
-        <CreditRiskDashboard snapshot={creditRiskWorkspace.snapshot} />
 
         <main className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section className="rounded-md border border-border bg-card p-4">
