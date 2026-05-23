@@ -94,8 +94,8 @@ export function AuthPage() {
   return (
     <div className="fixed inset-0 flex bg-background">
       {/* Left half — form */}
-      <div className="w-full md:w-1/2 flex flex-col overflow-y-auto">
-        <div className="w-full max-w-md mx-auto my-auto px-8 py-12">
+      <div className="flex w-full flex-col overflow-y-auto md:w-1/2">
+        <div className="mx-auto my-auto w-full max-w-md px-6 py-8 sm:px-8 sm:py-12">
           <div className="flex items-center gap-2 mb-8">
             <Sparkles className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Finance Anything</span>
@@ -129,7 +129,7 @@ export function AuthPage() {
               <input
                 id="username"
                 name="username"
-                className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                className="w-full rounded-md border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 autoComplete="username"
@@ -141,7 +141,7 @@ export function AuthPage() {
               <input
                 id="password"
                 name="password"
-                className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                className="w-full rounded-md border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}

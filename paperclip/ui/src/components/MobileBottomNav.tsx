@@ -1,16 +1,20 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { NavLink, useLocation } from "@/lib/router";
 import {
+  BrainCircuit,
   House,
   CircleDot,
   SquarePen,
   Users,
   Inbox,
 } from "lucide-react";
+import { financeApi } from "../api/finance";
 import { useCompany } from "../context/CompanyContext";
 import { useDialogActions } from "../context/DialogContext";
 import { useLanguage } from "../context/LanguageContext";
 import { SIDEBAR_SCROLL_RESET_STATE } from "../lib/navigation-scroll";
+import { queryKeys } from "../lib/queryKeys";
 import { cn } from "../lib/utils";
 import { useInboxBadge } from "../hooks/useInboxBadge";
 
@@ -41,10 +45,19 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
   const { openNewIssue } = useDialogActions();
   const { t } = useLanguage();
   const inboxBadge = useInboxBadge(selectedCompanyId);
+  const financeStatusQuery = useQuery({
+    queryKey: queryKeys.finance.status,
+    queryFn: () => financeApi.status(),
+    retry: false,
+    staleTime: 30_000,
+  });
+  const financeEnabled = financeStatusQuery.data?.enabled === true;
 
   const items = useMemo<MobileNavItem[]>(
     () => [
-      { type: "link", to: "/dashboard", label: t("Home"), icon: House },
+      financeEnabled
+        ? { type: "link", to: "/finance", label: t("Decision Workbench"), icon: BrainCircuit }
+        : { type: "link", to: "/dashboard", label: t("Home"), icon: House },
       { type: "link", to: "/issues", label: t("Issues"), icon: CircleDot },
       { type: "action", label: t("Create"), icon: SquarePen, onClick: () => openNewIssue() },
       { type: "link", to: "/agents/all", label: t("Agents"), icon: Users },
@@ -56,7 +69,7 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
         badge: inboxBadge.inbox,
       },
     ],
-    [openNewIssue, inboxBadge.inbox, t],
+    [financeEnabled, openNewIssue, inboxBadge.inbox, t],
   );
 
   return (

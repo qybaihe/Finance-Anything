@@ -125,23 +125,23 @@ export function FinanceHome() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 lg:px-6">
-        <header className="flex flex-col gap-4 border-b border-border pb-5 md:flex-row md:items-end md:justify-between">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-0 pb-2 pt-1 sm:gap-6 sm:px-4 sm:py-6 lg:px-6">
+        <header className="flex flex-col gap-4 border-b border-border px-1 pb-4 sm:px-0 sm:pb-5 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CircleDollarSign className="h-4 w-4 text-emerald-500" />
               <span>Finance Anything</span>
             </div>
-            <h1 className="mt-2 text-2xl font-semibold tracking-normal">万能决策助手</h1>
+            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">万能决策助手</h1>
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-3">
-            <div className="rounded-md border border-border px-3 py-2">
+            <div className="col-span-2 rounded-md border border-border px-3 py-2 md:col-span-1">
               <div className="text-muted-foreground">工作空间</div>
-              <div className="mt-1 font-medium">{company?.name ?? "准备中"}</div>
+              <div className="mt-1 break-words font-medium leading-snug">{company?.name ?? "准备中"}</div>
             </div>
             <div className="rounded-md border border-border px-3 py-2">
               <div className="text-muted-foreground">协同团队</div>
-              <div className="mt-1 font-medium">{formatAgentCount(bootstrapQuery.data?.agentCount)}</div>
+              <div className="mt-1 font-medium leading-snug">{formatAgentCount(bootstrapQuery.data?.agentCount)}</div>
             </div>
             <div className="rounded-md border border-border px-3 py-2">
               <div className="text-muted-foreground">状态</div>
@@ -150,8 +150,8 @@ export function FinanceHome() {
           </div>
         </header>
 
-        <main className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="rounded-md border border-border bg-card p-4">
+        <main className="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <section className="rounded-md border border-border bg-card p-4 sm:p-5">
             <div className="mb-3 flex items-center gap-2">
               <BrainCircuit className="h-4 w-4 text-cyan-500" />
               <h2 className="text-base font-semibold">提出一个目标</h2>
@@ -160,14 +160,14 @@ export function FinanceHome() {
               value={goalText}
               onChange={(event) => setGoalText(event.target.value)}
               placeholder="例如：我是否应该在这个价格买入特斯拉股票？"
-              className="min-h-40 resize-none text-base"
+              className="min-h-36 resize-none text-base sm:min-h-40"
             />
             <div className="mt-3 flex flex-wrap gap-2">
               {EXAMPLE_GOALS.map((item) => (
                 <button
                   key={item}
                   type="button"
-                  className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
+                  className="max-w-full rounded-md border border-border px-3 py-1.5 text-left text-xs leading-snug text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
                   onClick={() => setGoalText(item)}
                 >
                   {item}
@@ -175,7 +175,7 @@ export function FinanceHome() {
               ))}
             </div>
             {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
-            <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">
                 {bootstrapQuery.data?.defaultAgentId ? "总规划师会自动接手并分配给其他 Agent。" : "正在等待总规划师就绪。"}
               </div>
@@ -183,7 +183,7 @@ export function FinanceHome() {
                 type="button"
                 disabled={!canStart}
                 onClick={() => createIssueMutation.mutate()}
-                className="gap-2"
+                className="h-11 w-full gap-2 sm:h-10 sm:w-auto"
               >
                 <Play className="h-4 w-4" />
                 {createIssueMutation.isPending ? "启动中..." : "开始决策"}
@@ -191,13 +191,13 @@ export function FinanceHome() {
             </div>
           </section>
 
-          <aside className="space-y-3">
+          <aside className="space-y-3 pb-2">
             <div className="rounded-md border border-border bg-card p-4">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-amber-500" />
                 <h2 className="text-sm font-semibold">协同 Agent</h2>
               </div>
-              <div className="mt-3 max-h-[360px] space-y-2 overflow-auto pr-1">
+              <div className="mt-3 max-h-none space-y-2 overflow-visible pr-0 sm:max-h-[360px] sm:overflow-auto sm:pr-1">
                 {readyAgents.length > 0 ? readyAgents.map((agent) => (
                   <div key={agent.id} className="flex items-start gap-2 rounded-md border border-border/70 px-3 py-2">
                     <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />
