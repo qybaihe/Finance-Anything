@@ -1,0 +1,23 @@
+[Unit]
+Description=Paperclip AI Agent Orchestrator
+Requires=qinzi-paperclip-db.service
+After=qinzi-paperclip-db.service
+
+[Container]
+Image=paperclip-local
+ContainerName=qinzi-paperclip
+Pod=qinzi-paperclip.pod
+Volume=%h/.local/share/qinzi-paperclip:/paperclip:Z
+Environment=HOST=0.0.0.0
+Environment=PAPERCLIP_HOME=/paperclip
+Environment=PAPERCLIP_DEPLOYMENT_MODE=authenticated
+Environment=PAPERCLIP_DEPLOYMENT_EXPOSURE=private
+Environment=PAPERCLIP_PUBLIC_URL=http://localhost:3200
+EnvironmentFile=%h/.config/containers/systemd/qinzi-paperclip.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

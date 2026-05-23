@@ -1,0 +1,44 @@
+# Local secrets and machine-specific files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.mobileprovision
+baihe.pem
+agents_runtime_config_backup_*.json
+opencode.json
+
+# Local automation/runtime artifacts
+.codex-tmp/
+.deploy/
+.playwright-cli/
+.paperclip/
+.paperclip-local/
+.agents/
+.claude/settings.local.json
+
+# Dependencies and build outputs
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+ui-dist/
+**/ui-dist/
+.vite/
+coverage/
+.pnpm-store/
+*.tsbuildinfo
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+*.tmp
+tmp/
+
+# Local-only notes
+AGENTS.md
+Finance Anything 产品需求书.md

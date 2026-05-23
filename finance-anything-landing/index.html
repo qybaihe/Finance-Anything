@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Anything - 万能决策助手</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 全屏粒子动效画布 -->
+    <canvas id="canvas-bg"></canvas>
+
+    <main class="container">
+        <!-- 首屏核心区域 -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="badge animate-in fade-up stagger-1">
+                    <span class="badge-dot"></span>
+                    FINANCE ANYTHING MULTI-AGENT DECISION OS
+                </div>
+                <h1 class="hero-title animate-in fade-up stagger-2">
+                    Finance<br>Anything
+                </h1>
+                <h2 class="hero-subtitle animate-in fade-up stagger-3">万能支付决策入口</h2>
+                <p class="hero-desc animate-in fade-up stagger-4">
+                    买股票、买商品、买二手资产，或者做任何高成本选择。<br>
+                    Finance Anything 会自动调度 13 个专业 Agent，帮你把支付前的证据、风险、替代方案和最终报告一次算清。
+                </p>
+                <div class="cta-group animate-in fade-up stagger-5">
+                    <a href="/login" class="btn btn-primary">
+                        <span class="btn-text">开始决策</span>
+                        <span class="btn-arrow">→</span>
+                        <div class="btn-glow"></div>
+                    </a>
+                    <a href="/signup" class="btn btn-secondary">创建账号</a>
+                </div>
+                
+                <div class="hero-stats animate-in fade-up stagger-6">
+                    <div class="stat-item stat-loop">
+                        <div class="stat-val">13</div>
+                        <div class="stat-label">专业 Agent</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-val stat-infinity">∞</div>
+                        <div class="stat-label">循环决策次</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-val">0.1s</div>
+                        <div class="stat-label">响应延迟</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-visual animate-in fade-left stagger-4">
+                <!-- 决策控制台 UI -->
+                <div class="console-panel">
+                    <div class="console-header">
+                        <div class="window-controls">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="console-title">Finance Anything // Decision Console</div>
+                        <div class="console-status">ONLINE</div>
+                    </div>
+                    
+                    <div class="console-body">
+                        <div class="poster-preview" aria-label="Finance Anything 宣传图预览">
+                            <picture>
+                                <source srcset="assets/finance-anything-hero.webp" type="image/webp">
+                                <img src="assets/finance-anything-hero.jpg" alt="Finance Anything 万能支付决策入口">
+                            </picture>
+                        </div>
+                        
+                        <div class="terminal-output" aria-label="Agent 循环委派终端">
+                            <div class="handoff-track">
+                                <div class="handoff-node active" data-flow-node="0">
+                                    <span>01</span>
+                                    <strong>总规划</strong>
+                                </div>
+                                <div class="handoff-node" data-flow-node="1">
+                                    <span>02</span>
+                                    <strong>信息采集</strong>
+                                </div>
+                                <div class="handoff-node" data-flow-node="2">
+                                    <span>03</span>
+                                    <strong>二手价值</strong>
+                                </div>
+                                <div class="handoff-node" data-flow-node="3">
+                                    <span>04</span>
+                                    <strong>反方辩论</strong>
+                                </div>
+                                <div class="handoff-node" data-flow-node="4">
+                                    <span>05</span>
+                                    <strong>报告回传</strong>
+                                </div>
+                            </div>
+                            <div class="handoff-beam" data-handoff-beam></div>
+                            <div class="terminal-lines" data-terminal-lines>
+                                <div class="line success"><span>[CORE]</span> Finance Anything 接收支付决策目标</div>
+                                <div class="line"><span>[PLAN]</span> 决策总规划师拆解约束与目标</div>
+                                <div class="line highlight"><span>[DELEGATE]</span> 委派任务 → 信息采集 Agent</div>
+                                <div class="line"><span>[WATCH]</span> 监听证据包、价格曲线与用户偏好</div>
+                                <div class="line highlight"><span>[RESULT]</span> 信息采集 Agent 回传证据包</div>
+                                <div class="line warning"><span>[VERIFY]</span> 反方辩论 Agent 正在挑战结论</div>
+                                <div class="line success"><span>[REPORT]</span> 最终决策报告准备生成</div>
+                            </div>
+                            <div class="terminal-status">
+                                <span data-loop-label>Cycle 01 · 委派中</span>
+                                <span class="cursor">_</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="agents" class="orchestration-section">
+            <div class="section-header animate-in fade-up">
+                <div class="subtitle">FINANCE ANYTHING ORCHESTRATION</div>
+                <h3>总控先判断，再调用合适的 Agent</h3>
+                <p>不是 13 个 Agent 一起乱跑，而是 Finance Anything 根据你的支付场景选择需要工作的人。</p>
+            </div>
+
+            <div class="orchestration-board animate-in fade-up stagger-2">
+                <div class="controller-card">
+                    <div class="controller-meta">01 · 总控</div>
+                    <h4>决策总规划师</h4>
+                    <p>读取“我要不要支付/购买”的问题，先判断场景、预算、风险边界，再决定本轮调用哪些 Agent。</p>
+                    <div class="controller-flow">
+                        <span>支付目标</span>
+                        <span>约束识别</span>
+                        <span>Agent 选择</span>
+                        <span>报告标准</span>
+                    </div>
+                </div>
+
+                <div class="flow-lane flow-out" aria-hidden="true">
+                    <span></span>
+                </div>
+
+                <div class="agent-execution-area">
+                    <div class="execution-column selected-column">
+                        <div class="column-heading">
+                            <span>Selected Agents</span>
+                            <strong>本轮开始工作</strong>
+                        </div>
+                        <div class="agent-node selected">
+                            <span>02</span><strong>用户画像与约束</strong><em>确认预算、偏好、风险承受力</em>
+                        </div>
+                        <div class="agent-node selected">
+                            <span>03</span><strong>信息采集</strong><em>抓取价格、评论、财报与市场信号</em>
+                        </div>
+                        <div class="agent-node selected">
+                            <span>04</span><strong>证据可信度</strong><em>交叉验证来源，过滤低可信数据</em>
+                        </div>
+                        <div class="agent-node selected gold">
+                            <span>12</span><strong>二手价值 Agent</strong><em>计算折旧、保值率和转售流动性</em>
+                        </div>
+                    </div>
+
+                    <div class="execution-column selected-column">
+                        <div class="column-heading">
+                            <span>Parallel Work</span>
+                            <strong>并行分析与辩论</strong>
+                        </div>
+                        <div class="agent-node selected">
+                            <span>06</span><strong>成本与收益</strong><em>合并机会成本、维护成本和收益</em>
+                        </div>
+                        <div class="agent-node selected danger">
+                            <span>07</span><strong>风险 Agent</strong><em>标记下行风险与执行失败点</em>
+                        </div>
+                        <div class="agent-node selected danger">
+                            <span>09</span><strong>反方辩论</strong><em>挑战结论，寻找反证和偏误</em>
+                        </div>
+                        <div class="agent-node selected">
+                            <span>08</span><strong>场景模拟</strong><em>推演乐观、基准、悲观结果</em>
+                        </div>
+                    </div>
+
+                    <div class="execution-column standby-column">
+                        <div class="column-heading">
+                            <span>Standby Pool</span>
+                            <strong>按场景待命</strong>
+                        </div>
+                        <div class="standby-grid">
+                            <div class="agent-node standby"><span>05</span><strong>替代方案</strong></div>
+                            <div class="agent-node standby"><span>10</span><strong>股票专项</strong></div>
+                            <div class="agent-node standby"><span>11</span><strong>商品专项</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-lane flow-in" aria-hidden="true">
+                    <span></span>
+                </div>
+
+                <div class="report-card-final">
+                    <div class="report-meta">13 · 交付</div>
+                    <h4>决策报告 Agent</h4>
+                    <p>汇总所有被调用 Agent 的证据、分歧和建议，输出一份可执行的最终支付决策报告。</p>
+                    <div class="report-pills">
+                        <span>是否支付</span>
+                        <span>关键理由</span>
+                        <span>风险提示</span>
+                        <span>下一步行动</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
