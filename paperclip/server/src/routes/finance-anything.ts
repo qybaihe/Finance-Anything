@@ -14,12 +14,14 @@ import {
   companyService,
   documentService,
   goalService,
+  heartbeatService,
   issueReferenceService,
   issueService,
   logActivity,
   projectService,
   workProductService,
 } from "../services/index.js";
+import { queueIssueAssignmentWakeup } from "../services/issue-assignment-wakeup.js";
 
 type FinanceBootstrapResult = {
   enabled: true;
@@ -558,6 +560,7 @@ export function financeAnythingRoutes(db: Db) {
   const issueReferences = issueReferenceService(db);
   const documents = documentService(db);
   const workProducts = workProductService(db);
+  const heartbeat = heartbeatService(db);
 
   router.get("/status", (_req, res) => {
     res.json({
@@ -674,6 +677,15 @@ export function financeAnythingRoutes(db: Db) {
         projectId: workspace.projectId,
         goalId: workspace.goalId,
       },
+    });
+    void queueIssueAssignmentWakeup({
+      heartbeat,
+      issue,
+      reason: "finance_decision_started",
+      mutation: "create",
+      contextSource: "finance.decision",
+      requestedByActorType: actor.actorType,
+      requestedByActorId: actor.actorId,
     });
 
     res.status(201).json({
