@@ -14,7 +14,6 @@ import { financeApi, type FinanceReportEntry, type FinanceReportSource } from ".
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useSearchParams } from "@/lib/router";
-import { MarkdownBody } from "@/components/MarkdownBody";
 import { queryKeys } from "../lib/queryKeys";
 import { cn, relativeTime } from "../lib/utils";
 
@@ -29,30 +28,27 @@ function statusText(status: string) {
 }
 
 function sourceKindText(source: FinanceReportSource | null) {
-  if (!source) return "等待报告";
-  if (source.kind === "document") return "文档";
-  if (source.kind === "attachment") return source.contentType === "application/pdf" ? "PDF" : "HTML";
-  return "产物";
+  if (!source) return "等待 HTML";
+  if (source.kind === "attachment") return "HTML 附件";
+  if (source.kind === "work_product") return "HTML 产物";
+  return "报告索引";
 }
 
 function sourceHref(source: FinanceReportSource | null, report: FinanceReportEntry) {
   if (!source) return report.issuePath;
-  if (source.kind === "document" && source.key) return `${report.issuePath}#document-${source.key}`;
   return source.url ?? report.issuePath;
 }
 
 function canEmbed(source: FinanceReportSource | null) {
   if (!source?.url) return false;
-  if (source.kind === "attachment") {
-    return source.contentType === "text/html" || source.contentType === "application/pdf";
-  }
+  if (source.kind === "attachment") return (source.contentType ?? "").toLowerCase().startsWith("text/html");
   return source.url.startsWith("/") && /\.html?(?:$|[?#])/i.test(source.url);
 }
 
 function reportScoreLabel(report: FinanceReportEntry) {
-  if (report.reportStatus === "ready") return `${report.sourceCount} 个报告产物`;
+  if (report.reportStatus === "ready") return `${report.sourceCount} 份 HTML 报告`;
   if (report.issueStatus === "done") return "等待归档";
-  return "等待 Agent 生成";
+  return "等待 HTML 报告";
 }
 
 function ReportPreview({ report }: { report: FinanceReportEntry | null }) {
@@ -83,26 +79,22 @@ function ReportPreview({ report }: { report: FinanceReportEntry | null }) {
               决策记录
             </Link>
           </Button>
-          <Button asChild size="sm" className="gap-1.5">
-            <a href={sourceHref(source, report)} target="_blank" rel="noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" />
-              打开报告
-            </a>
-          </Button>
+          {source?.url ? (
+            <Button asChild size="sm" className="gap-1.5">
+              <a href={sourceHref(source, report)} target="_blank" rel="noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                打开 HTML
+              </a>
+            </Button>
+          ) : null}
         </div>
       </div>
 
-      {source?.kind === "document" ? (
-        <div className="max-h-[72vh] overflow-auto px-4 py-5 sm:px-6">
-          <MarkdownBody className="text-sm leading-7" softBreaks={false}>
-            {source.body?.trim() || "报告文档已生成，正在读取正文..."}
-          </MarkdownBody>
-        </div>
-      ) : canEmbed(source) ? (
+      {canEmbed(source) ? (
         <iframe
           title={source?.title ?? report.issueTitle}
           src={source?.url ?? undefined}
-          className="h-[72vh] w-full bg-background"
+          className="h-[76vh] min-h-[620px] w-full bg-background"
           sandbox="allow-same-origin allow-popups allow-forms"
         />
       ) : source?.url ? (
@@ -110,12 +102,12 @@ function ReportPreview({ report }: { report: FinanceReportEntry | null }) {
           <FileCheck2 className="h-10 w-10 text-primary" />
           <div>
             <p className="text-sm font-medium">报告产物已就绪</p>
-            <p className="mt-1 text-xs text-muted-foreground">此产物会在新窗口打开。</p>
+            <p className="mt-1 text-xs text-muted-foreground">此 HTML 报告会在新窗口打开。</p>
           </div>
           <Button asChild className="gap-1.5">
             <a href={source.url} target="_blank" rel="noreferrer">
               <ExternalLink className="h-4 w-4" />
-              打开报告
+              打开 HTML
             </a>
           </Button>
         </div>
@@ -123,8 +115,8 @@ function ReportPreview({ report }: { report: FinanceReportEntry | null }) {
         <div className="flex min-h-[360px] flex-col items-center justify-center gap-3 px-6 text-center">
           <Clock3 className="h-10 w-10 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium">报告还在生成中</p>
-            <p className="mt-1 text-xs text-muted-foreground">报告 Agent 完成后会自动出现在这里。</p>
+            <p className="text-sm font-medium">HTML 报告还在生成中</p>
+            <p className="mt-1 text-xs text-muted-foreground">报告 Agent 上传 HTML 文件后会自动在这里预览。</p>
           </div>
         </div>
       )}
@@ -192,7 +184,7 @@ export function FinanceReports() {
               </div>
               <h1 className="text-lg font-bold tracking-tight sm:text-xl">最终报告</h1>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">每一次决策的报告产物都会沉淀在这里。</p>
+            <p className="mt-1 text-xs text-muted-foreground">每一次决策的 HTML 报告都会沉淀在这里。</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-xs sm:w-[360px]">
             <div className="rounded-md border bg-card px-3 py-2">

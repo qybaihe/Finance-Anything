@@ -46,6 +46,252 @@ const REPORT_DOCUMENT_KEYS = new Set([
   "summary",
 ]);
 const REPORT_TEXT_RE = /(最终报告|决策报告|决策结论|final\s*report|decision\s*report|report)/i;
+const FINAL_REPORT_HTML_TEMPLATE = String.raw`
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{REPORT_TITLE}}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #161616;
+      --muted: #66615b;
+      --rule: #d8d1c7;
+      --paper: #f7f1e6;
+      --panel: #fffaf0;
+      --accent: #0f766e;
+      --danger: #9f1239;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #ebe3d6;
+      color: var(--ink);
+      font-family: "Noto Serif SC", "Songti SC", "SimSun", Georgia, serif;
+      line-height: 1.72;
+    }
+    .newspaper {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 24px auto;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      box-shadow: 0 24px 70px rgba(42, 31, 18, 0.18);
+    }
+    .masthead {
+      padding: 28px 34px 18px;
+      border-bottom: 4px double var(--ink);
+      text-align: center;
+    }
+    .kicker {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font: 600 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 14px 0 8px;
+      font-size: clamp(34px, 6vw, 72px);
+      line-height: 1;
+      letter-spacing: .02em;
+    }
+    .subtitle {
+      max-width: 860px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 17px;
+    }
+    .edition {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 1px solid var(--rule);
+      font: 600 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+    }
+    .edition div {
+      padding: 10px 14px;
+      border-right: 1px solid var(--rule);
+      min-width: 0;
+    }
+    .edition div:last-child { border-right: 0; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      gap: 0;
+    }
+    main, aside { padding: 28px 34px; }
+    aside {
+      border-left: 1px solid var(--rule);
+      background: rgba(255, 250, 240, .72);
+    }
+    section { break-inside: avoid; margin-bottom: 28px; }
+    h2 {
+      margin: 0 0 12px;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 6px;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+    h3 { margin: 18px 0 8px; font-size: 17px; }
+    p { margin: 0 0 12px; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 5px 0; }
+    .lead {
+      font-size: 20px;
+      line-height: 1.75;
+    }
+    .dropcap::first-letter {
+      float: left;
+      margin: 10px 8px 0 0;
+      font-size: 62px;
+      line-height: .8;
+      font-weight: 900;
+    }
+    .verdict {
+      border: 2px solid var(--ink);
+      background: var(--panel);
+      padding: 18px;
+    }
+    .verdict strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1.3;
+    }
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .score {
+      border: 1px solid var(--rule);
+      background: rgba(255,255,255,.42);
+      padding: 10px;
+    }
+    .score span { display: block; color: var(--muted); font-size: 12px; }
+    .score b { display: block; margin-top: 4px; font-size: 20px; }
+    .risk-high { color: var(--danger); }
+    .risk-ok { color: var(--accent); }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 13px;
+    }
+    .table th, .table td {
+      border-bottom: 1px solid var(--rule);
+      padding: 9px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .table th {
+      border-top: 2px solid var(--ink);
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .pullquote {
+      margin: 18px 0;
+      border-top: 3px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+      padding: 14px 0;
+      font-size: 22px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+    .note {
+      border: 1px solid var(--rule);
+      background: rgba(255,255,255,.35);
+      padding: 14px;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    footer {
+      border-top: 4px double var(--ink);
+      padding: 16px 34px 24px;
+      color: var(--muted);
+      font: 12px/1.6 ui-sans-serif, system-ui, sans-serif;
+    }
+    @media (max-width: 820px) {
+      .newspaper { width: 100%; margin: 0; border-left: 0; border-right: 0; }
+      .kicker, .edition, .layout, .score-grid { grid-template-columns: 1fr; }
+      .kicker { display: grid; text-align: left; }
+      main, aside, .masthead, footer { padding-left: 18px; padding-right: 18px; }
+      aside { border-left: 0; border-top: 1px solid var(--rule); }
+    }
+  </style>
+</head>
+<body>
+  <article class="newspaper" data-report-kind="finance-anything-final-report">
+    <header class="masthead">
+      <div class="kicker"><span>Finance Anything Final Report</span><span>{{REPORT_DATE}}</span></div>
+      <h1>{{REPORT_TITLE}}</h1>
+      <p class="subtitle">{{ONE_SENTENCE_SUMMARY}}</p>
+    </header>
+    <div class="edition">
+      <div>决策对象：{{DECISION_OBJECT}}</div>
+      <div>建议动作：{{ACTION}}</div>
+      <div>风险等级：{{RISK_LEVEL}}</div>
+      <div>置信度：{{CONFIDENCE}}</div>
+    </div>
+    <div class="layout">
+      <main>
+        <section class="verdict">
+          <strong>最终结论：{{FINAL_VERDICT}}</strong>
+          <p class="lead">{{VERDICT_REASON}}</p>
+          <div class="score-grid">
+            <div class="score"><span>收益潜力</span><b>{{UPSIDE_SCORE}}</b></div>
+            <div class="score"><span>风险压力</span><b>{{RISK_SCORE}}</b></div>
+            <div class="score"><span>执行优先级</span><b>{{PRIORITY_SCORE}}</b></div>
+          </div>
+        </section>
+        <section>
+          <h2>关键事实</h2>
+          <p class="dropcap">{{KEY_FACTS_LEAD}}</p>
+          <ul>{{KEY_FACTS_LIST}}</ul>
+        </section>
+        <section>
+          <h2>方案比较</h2>
+          <table class="table">
+            <thead><tr><th>方案</th><th>收益</th><th>成本</th><th>主要风险</th><th>判断</th></tr></thead>
+            <tbody>{{OPTIONS_ROWS}}</tbody>
+          </table>
+        </section>
+        <section>
+          <h2>执行计划</h2>
+          <ol>{{ACTION_PLAN}}</ol>
+        </section>
+      </main>
+      <aside>
+        <section>
+          <h2>风险专栏</h2>
+          <p class="pullquote">{{RISK_PULLQUOTE}}</p>
+          <ul>{{RISK_LIST}}</ul>
+        </section>
+        <section>
+          <h2>反方意见</h2>
+          <p>{{COUNTER_ARGUMENT}}</p>
+        </section>
+        <section>
+          <h2>复盘条件</h2>
+          <ul>{{REVIEW_TRIGGERS}}</ul>
+        </section>
+        <section class="note">
+          本报告为 Finance Anything Agent 基于当前输入与可用证据生成的决策辅助，不构成银行授信、投资承诺或法律/财务保证。
+        </section>
+      </aside>
+    </div>
+    <footer>生成时间：{{GENERATED_AT}} · 报告文件：finance-anything-decision-report.html</footer>
+  </article>
+</body>
+</html>
+`.trim();
 
 function isTruthy(value: string | undefined) {
   if (!value) return false;
@@ -379,9 +625,15 @@ function buildDecisionDescription(input: { goal: string; context?: string }) {
     "",
     "请多 Agent 协同完成信息采集、证据校验、替代方案、成本收益、风险、场景模拟、反方辩论、二手价值分析，并由决策报告 Agent 输出最终决策报告。",
     "",
-    "最终报告要求：必须生成一份可打开的 HTML 报告文件并上传到本目标，报告需要综合各 Agent 结论、关键证据、分歧、评分、风险控制、执行条件和复盘计划。",
+    "最终报告硬性要求：最终报告文件只能是 HTML，必须上传一个 content-type 为 text/html 的 HTML 附件，文件名固定为 finance-anything-decision-report.html。不要把 PDF、Markdown、DOCX 或纯文本文档作为最终报告文件。",
     "",
-    "报告沉淀要求：决策报告 Agent 完成后，必须同步创建或更新 key 为 final-report 的 Issue Document，标题写“最终报告”，正文包含最终结论、报告摘要、HTML/PDF 报告链接或附件说明；如果创建 Work Product 或上传 HTML/PDF 附件，标题或文件名必须包含“最终报告”或“决策报告”。",
+    "报告沉淀要求：决策报告 Agent 完成后，必须上传上述 HTML 附件；可以同步创建或更新 key 为 final-report 的 Issue Document 作为索引，标题写“最终报告”，正文只写最终结论摘要、HTML 文件名和生成时间，不要把它当最终报告正文。",
+    "",
+    "报告预览约束：Finance Anything 左侧“最终报告”栏目只把 HTML 报告文件视为 ready 报告，右侧预览会直接 iframe 加载 HTML。请确保 HTML 是完整单文件、可独立打开、移动端可读、无外部资源依赖。",
+    "",
+    "HTML 报告模板：必须采用下面的报纸风格模板结构，可替换占位符和补充内容，但不要删除 data-report-kind=\"finance-anything-final-report\" 标识，也不要引用外部脚本或远程样式。",
+    "",
+    FINAL_REPORT_HTML_TEMPLATE,
   ].filter(Boolean).join("\n");
 }
 
@@ -415,37 +667,40 @@ function isReportWorkProduct(product: FinanceReportWorkProduct) {
     product.type,
     product.provider,
   ].filter(Boolean).join(" ");
-  if (product.isPrimary && (product.type === "document" || product.type === "artifact")) return true;
-  return REPORT_TEXT_RE.test(haystack) || /\.html?(?:$|[?#])/i.test(product.url ?? "");
+  const htmlUrl = /\.html?(?:$|[?#])/i.test(product.url ?? "");
+  return htmlUrl && (product.isPrimary || REPORT_TEXT_RE.test(haystack) || product.type === "artifact" || product.type === "document");
 }
 
 function isReportAttachment(attachment: FinanceReportAttachment) {
   const filename = attachment.originalFilename ?? "";
-  const contentType = attachment.contentType ?? "";
-  return REPORT_TEXT_RE.test(filename)
-    || /\.html?$/i.test(filename)
-    || /\.pdf$/i.test(filename)
-    || contentType === "text/html"
-    || contentType === "application/pdf";
+  const contentType = (attachment.contentType ?? "").toLowerCase();
+  return contentType.startsWith("text/html") || /\.html?$/i.test(filename);
 }
 
 function sourceUpdatedAt(source: { updatedAt?: unknown; createdAt?: unknown }) {
   return maybeDateString(source.updatedAt) ?? maybeDateString(source.createdAt) ?? new Date(0).toISOString();
 }
 
-function sourceScore(source: { kind: string; key?: string | null; isPrimary?: boolean | null; contentType?: string | null; title?: string | null }) {
+function isHtmlReportSource(source: { kind: string; contentType?: string | null; url?: string | null }) {
+  if (source.kind === "attachment") return (source.contentType ?? "").toLowerCase().startsWith("text/html");
+  if (source.kind === "work_product") return /\.html?(?:$|[?#])/i.test(source.url ?? "");
+  return false;
+}
+
+function sourceScore(source: { kind: string; key?: string | null; isPrimary?: boolean | null; contentType?: string | null; title?: string | null; url?: string | null }) {
   let score = 0;
-  if (source.isPrimary) score += 50;
-  if (source.key === "final-report") score += 60;
-  if (source.kind === "document") score += 35;
-  if (source.kind === "attachment" && source.contentType === "text/html") score += 30;
-  if (source.kind === "work_product") score += 25;
+  if (isHtmlReportSource(source)) score += 100;
+  if (source.kind === "attachment" && (source.contentType ?? "").toLowerCase().startsWith("text/html")) score += 45;
+  if (source.kind === "work_product" && /\.html?(?:$|[?#])/i.test(source.url ?? "")) score += 35;
+  if (source.isPrimary) score += 20;
   if (REPORT_TEXT_RE.test(source.title ?? "")) score += 15;
+  if (source.key === "final-report") score += 5;
   return score;
 }
 
-function pickPrimarySource<T extends { kind: string; updatedAt: string; key?: string | null; isPrimary?: boolean | null; contentType?: string | null; title?: string | null }>(sources: T[]) {
-  return [...sources].sort((a, b) => {
+function pickPrimarySource<T extends { kind: string; updatedAt: string; key?: string | null; isPrimary?: boolean | null; contentType?: string | null; title?: string | null; url?: string | null }>(sources: T[]) {
+  const htmlSources = sources.filter(isHtmlReportSource);
+  return [...htmlSources].sort((a, b) => {
     const scoreDiff = sourceScore(b) - sourceScore(a);
     if (scoreDiff !== 0) return scoreDiff;
     return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
@@ -487,7 +742,7 @@ function buildReportSources(input: {
       revisionNumber: null,
       url: product.url,
       summary: product.summary,
-      contentType: null,
+      contentType: /\.html?(?:$|[?#])/i.test(product.url ?? "") ? "text/html" : null,
       filename: null,
       isPrimary: product.isPrimary,
       status: product.status,
@@ -536,6 +791,7 @@ async function buildReportEntry(input: {
     includeBody: input.includeBody,
   });
   const primarySource = pickPrimarySource(sources);
+  const htmlSourceCount = sources.filter(isHtmlReportSource).length;
   return {
     issueId: input.issue.id,
     issueIdentifier: input.issue.identifier,
@@ -543,7 +799,7 @@ async function buildReportEntry(input: {
     issueStatus: input.issue.status,
     issuePath: `/issues/${input.issue.identifier ?? input.issue.id}`,
     reportStatus: primarySource ? "ready" as const : "pending" as const,
-    sourceCount: sources.length,
+    sourceCount: htmlSourceCount,
     primarySource,
     sources,
     createdAt: sourceUpdatedAt({ createdAt: input.issue.createdAt }),
