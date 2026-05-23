@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { NavLink, useLocation, useNavigate } from "@/lib/router";
+import { NavLink, useLocation } from "@/lib/router";
 import {
   BrainCircuit,
   House,
   CircleDot,
+  FileCheck2,
   ShieldCheck,
   SquarePen,
   Users,
@@ -42,7 +43,6 @@ type MobileNavItem = MobileNavLinkItem | MobileNavActionItem;
 
 export function MobileBottomNav({ visible }: MobileBottomNavProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { selectedCompanyId } = useCompany();
   const { openNewIssue } = useDialogActions();
   const { t } = useLanguage();
@@ -61,15 +61,7 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
         return [
           { type: "link", to: "/finance", label: t("Decision Workbench"), icon: BrainCircuit },
           { type: "link", to: "/credit-risk", label: "风控", icon: ShieldCheck },
-          {
-            type: "action",
-            label: t("Ask"),
-            icon: SquarePen,
-            onClick: () => {
-              navigate("/finance");
-              window.setTimeout(() => document.getElementById("finance-decision-input")?.focus(), 50);
-            },
-          },
+          { type: "link", to: "/reports", label: "报告", icon: FileCheck2 },
           { type: "link", to: "/issues", label: t("Decision History"), icon: CircleDot },
           {
             type: "link",
@@ -95,7 +87,7 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
         },
       ];
     },
-    [financeEnabled, navigate, openNewIssue, inboxBadge.inbox, t],
+    [financeEnabled, openNewIssue, inboxBadge.inbox, t],
   );
 
   return (

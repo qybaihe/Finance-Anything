@@ -12,11 +12,13 @@ import {
   agentInstructionsService,
   agentService,
   companyService,
+  documentService,
   goalService,
   issueReferenceService,
   issueService,
   logActivity,
   projectService,
+  workProductService,
 } from "../services/index.js";
 
 type FinanceBootstrapResult = {
@@ -33,6 +35,15 @@ type FinanceCompany = NonNullable<Awaited<ReturnType<ReturnType<typeof companySe
 
 const DEFAULT_PRODUCT_NAME = "Finance Anything";
 const DEFAULT_MODEL = "xiaomi/mimo-v2.5-pro";
+const REPORT_DOCUMENT_KEYS = new Set([
+  "final-report",
+  "final_report",
+  "decision-report",
+  "decision_report",
+  "report",
+  "summary",
+]);
+const REPORT_TEXT_RE = /(最终报告|决策报告|决策结论|final\s*report|decision\s*report|report)/i;
 
 function isTruthy(value: string | undefined) {
   if (!value) return false;
@@ -367,7 +378,176 @@ function buildDecisionDescription(input: { goal: string; context?: string }) {
     "请多 Agent 协同完成信息采集、证据校验、替代方案、成本收益、风险、场景模拟、反方辩论、二手价值分析，并由决策报告 Agent 输出最终决策报告。",
     "",
     "最终报告要求：必须生成一份可打开的 HTML 报告文件并上传到本目标，报告需要综合各 Agent 结论、关键证据、分歧、评分、风险控制、执行条件和复盘计划。",
+    "",
+    "报告沉淀要求：决策报告 Agent 完成后，必须同步创建或更新 key 为 final-report 的 Issue Document，标题写“最终报告”，正文包含最终结论、报告摘要、HTML/PDF 报告链接或附件说明；如果创建 Work Product 或上传 HTML/PDF 附件，标题或文件名必须包含“最终报告”或“决策报告”。",
   ].filter(Boolean).join("\n");
+}
+
+type FinanceReportIssue = {
+  id: string;
+  identifier: string | null;
+  title: string;
+  status: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  completedAt?: Date | string | null;
+};
+type FinanceReportDocument = Awaited<ReturnType<ReturnType<typeof documentService>["listIssueDocuments"]>>[number];
+type FinanceReportWorkProduct = Awaited<ReturnType<ReturnType<typeof workProductService>["listForIssue"]>>[number];
+type FinanceReportAttachment = Awaited<ReturnType<ReturnType<typeof issueService>["listAttachments"]>>[number];
+
+function maybeDateString(value: unknown) {
+  return value instanceof Date ? value.toISOString() : typeof value === "string" ? value : null;
+}
+
+function isReportDocument(doc: FinanceReportDocument) {
+  if (REPORT_DOCUMENT_KEYS.has(doc.key)) return true;
+  return REPORT_TEXT_RE.test(doc.title ?? "");
+}
+
+function isReportWorkProduct(product: FinanceReportWorkProduct) {
+  const haystack = [
+    product.title,
+    product.summary,
+    product.url,
+    product.type,
+    product.provider,
+  ].filter(Boolean).join(" ");
+  if (product.isPrimary && (product.type === "document" || product.type === "artifact")) return true;
+  return REPORT_TEXT_RE.test(haystack) || /\.html?(?:$|[?#])/i.test(product.url ?? "");
+}
+
+function isReportAttachment(attachment: FinanceReportAttachment) {
+  const filename = attachment.originalFilename ?? "";
+  const contentType = attachment.contentType ?? "";
+  return REPORT_TEXT_RE.test(filename)
+    || /\.html?$/i.test(filename)
+    || /\.pdf$/i.test(filename)
+    || contentType === "text/html"
+    || contentType === "application/pdf";
+}
+
+function sourceUpdatedAt(source: { updatedAt?: unknown; createdAt?: unknown }) {
+  return maybeDateString(source.updatedAt) ?? maybeDateString(source.createdAt) ?? new Date(0).toISOString();
+}
+
+function sourceScore(source: { kind: string; key?: string | null; isPrimary?: boolean | null; contentType?: string | null; title?: string | null }) {
+  let score = 0;
+  if (source.isPrimary) score += 50;
+  if (source.key === "final-report") score += 60;
+  if (source.kind === "document") score += 35;
+  if (source.kind === "attachment" && source.contentType === "text/html") score += 30;
+  if (source.kind === "work_product") score += 25;
+  if (REPORT_TEXT_RE.test(source.title ?? "")) score += 15;
+  return score;
+}
+
+function pickPrimarySource<T extends { kind: string; updatedAt: string; key?: string | null; isPrimary?: boolean | null; contentType?: string | null; title?: string | null }>(sources: T[]) {
+  return [...sources].sort((a, b) => {
+    const scoreDiff = sourceScore(b) - sourceScore(a);
+    if (scoreDiff !== 0) return scoreDiff;
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  })[0] ?? null;
+}
+
+function buildReportSources(input: {
+  documents: FinanceReportDocument[];
+  workProducts: FinanceReportWorkProduct[];
+  attachments: FinanceReportAttachment[];
+  includeBody?: boolean;
+}) {
+  const documentSources = input.documents
+    .filter(isReportDocument)
+    .map((doc) => ({
+      id: doc.id,
+      kind: "document" as const,
+      key: doc.key,
+      title: doc.title ?? (doc.key === "final-report" ? "最终报告" : doc.key),
+      format: doc.format,
+      revisionNumber: doc.latestRevisionNumber,
+      url: null,
+      summary: null,
+      contentType: "text/markdown",
+      filename: null,
+      isPrimary: doc.key === "final-report",
+      body: input.includeBody ? doc.body : undefined,
+      createdAt: sourceUpdatedAt({ createdAt: doc.createdAt }),
+      updatedAt: sourceUpdatedAt(doc),
+    }));
+  const productSources = input.workProducts
+    .filter(isReportWorkProduct)
+    .map((product) => ({
+      id: product.id,
+      kind: "work_product" as const,
+      key: null,
+      title: product.title,
+      format: null,
+      revisionNumber: null,
+      url: product.url,
+      summary: product.summary,
+      contentType: null,
+      filename: null,
+      isPrimary: product.isPrimary,
+      status: product.status,
+      body: undefined,
+      createdAt: sourceUpdatedAt(product),
+      updatedAt: sourceUpdatedAt(product),
+    }));
+  const attachmentSources = input.attachments
+    .filter(isReportAttachment)
+    .map((attachment) => ({
+      id: attachment.id,
+      kind: "attachment" as const,
+      key: null,
+      title: attachment.originalFilename ?? "最终报告附件",
+      format: null,
+      revisionNumber: null,
+      url: `/api/attachments/${attachment.id}/content`,
+      summary: `${attachment.contentType} · ${attachment.byteSize} bytes`,
+      contentType: attachment.contentType,
+      filename: attachment.originalFilename,
+      isPrimary: attachment.contentType === "text/html",
+      body: undefined,
+      createdAt: sourceUpdatedAt(attachment),
+      updatedAt: sourceUpdatedAt(attachment),
+    }));
+  return [...documentSources, ...productSources, ...attachmentSources]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+}
+
+async function buildReportEntry(input: {
+  issue: FinanceReportIssue;
+  documents: ReturnType<typeof documentService>;
+  workProducts: ReturnType<typeof workProductService>;
+  issues: ReturnType<typeof issueService>;
+  includeBody?: boolean;
+}) {
+  const [documents, workProducts, attachments] = await Promise.all([
+    input.documents.listIssueDocuments(input.issue.id),
+    input.workProducts.listForIssue(input.issue.id),
+    input.issues.listAttachments(input.issue.id),
+  ]);
+  const sources = buildReportSources({
+    documents,
+    workProducts,
+    attachments,
+    includeBody: input.includeBody,
+  });
+  const primarySource = pickPrimarySource(sources);
+  return {
+    issueId: input.issue.id,
+    issueIdentifier: input.issue.identifier,
+    issueTitle: input.issue.title,
+    issueStatus: input.issue.status,
+    issuePath: `/issues/${input.issue.identifier ?? input.issue.id}`,
+    reportStatus: primarySource ? "ready" as const : "pending" as const,
+    sourceCount: sources.length,
+    primarySource,
+    sources,
+    createdAt: sourceUpdatedAt({ createdAt: input.issue.createdAt }),
+    updatedAt: sourceUpdatedAt(input.issue),
+    completedAt: maybeDateString("completedAt" in input.issue ? input.issue.completedAt : null),
+  };
 }
 
 export function financeAnythingRoutes(db: Db) {
@@ -376,6 +556,8 @@ export function financeAnythingRoutes(db: Db) {
   const access = accessService(db);
   const issues = issueService(db);
   const issueReferences = issueReferenceService(db);
+  const documents = documentService(db);
+  const workProducts = workProductService(db);
 
   router.get("/status", (_req, res) => {
     res.json({
@@ -398,6 +580,58 @@ export function financeAnythingRoutes(db: Db) {
       ...workspace,
     };
     res.json(result);
+  });
+
+  router.get("/reports", async (req, res) => {
+    if (!financeModeEnabled()) {
+      throw notFound("Finance Anything is not enabled");
+    }
+    const company = await resolveFinanceCompanyForActor({ req, companies, access });
+    const workspace = await ensureFinanceWorkspace({ db, company });
+    const limit = Math.min(
+      100,
+      Math.max(1, Number.isFinite(Number(req.query.limit)) ? Number(req.query.limit) : 60),
+    );
+    const decisionIssues = await issues.list(company.id, {
+      projectId: workspace.projectId,
+      limit,
+    });
+    const reports = await Promise.all(
+      decisionIssues.map((issue) =>
+        buildReportEntry({
+          issue,
+          documents,
+          workProducts,
+          issues,
+        }),
+      ),
+    );
+    res.json({
+      company,
+      projectId: workspace.projectId,
+      reports,
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  router.get("/reports/:issueId", async (req, res) => {
+    if (!financeModeEnabled()) {
+      throw notFound("Finance Anything is not enabled");
+    }
+    const company = await resolveFinanceCompanyForActor({ req, companies, access });
+    const workspace = await ensureFinanceWorkspace({ db, company });
+    const issue = await issues.getById(req.params.issueId as string);
+    if (!issue || issue.companyId !== company.id || issue.projectId !== workspace.projectId) {
+      throw notFound("Finance decision report not found");
+    }
+    const report = await buildReportEntry({
+      issue,
+      documents,
+      workProducts,
+      issues,
+      includeBody: true,
+    });
+    res.json({ report });
   });
 
   router.post("/decisions", async (req, res) => {

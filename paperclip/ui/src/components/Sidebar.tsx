@@ -3,6 +3,7 @@ import {
   BrainCircuit,
   Inbox,
   CircleDot,
+  FileCheck2,
   Target,
   LayoutDashboard,
   BookOpenText,
@@ -90,6 +91,7 @@ export function Sidebar() {
           <div className="flex flex-col gap-0.5">
             <SidebarNavItem to="/finance" label={t("Decision Workbench")} icon={BrainCircuit} liveCount={liveRunCount} />
             <SidebarNavItem to="/credit-risk" label="信用风控" icon={ShieldCheck} />
+            <SidebarNavItem to="/reports" label="最终报告" icon={FileCheck2} />
             <SidebarNavItem to="/issues" label={t("Decision History")} icon={CircleDot} />
             <SidebarNavItem to="/agents/all" label={t("Agents")} icon={Users} />
             <SidebarNavItem

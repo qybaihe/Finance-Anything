@@ -139,6 +139,8 @@ export const queryKeys = {
   finance: {
     status: ["finance", "status"] as const,
     bootstrap: ["finance", "bootstrap"] as const,
+    reports: ["finance", "reports"] as const,
+    report: (issueId: string) => ["finance", "reports", issueId] as const,
   },
   sidebarPreferences: {
     companyOrder: (userId: string) => ["sidebar-preferences", "company-order", userId] as const,
