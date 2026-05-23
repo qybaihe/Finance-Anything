@@ -36,6 +36,14 @@ describe("company routes", () => {
     expect(toCompanyRelativePath("/PAP/search?q=foo")).toBe("/search?q=foo");
   });
 
+  it("treats /finance as the unprefixed decision workbench route instead of a fake company prefix", () => {
+    expect(isBoardPathWithoutPrefix("/finance")).toBe(true);
+    expect(extractCompanyPrefixFromPath("/finance")).toBeNull();
+    expect(applyCompanyPrefix("/finance", "PAP")).toBe("/PAP/finance");
+    expect(applyCompanyPrefix("/finance?focus=new", "PAP")).toBe("/PAP/finance?focus=new");
+    expect(toCompanyRelativePath("/PAP/finance?focus=new")).toBe("/finance?focus=new");
+  });
+
   it("treats /opencode as a board route instead of a fake company prefix", () => {
     expect(isBoardPathWithoutPrefix("/opencode")).toBe(true);
     expect(extractCompanyPrefixFromPath("/opencode")).toBeNull();

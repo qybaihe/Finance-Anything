@@ -33,7 +33,9 @@ export function AuthPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState<AuthMode>("sign_up");
+  const requestedMode = searchParams.get("mode");
+  const initialMode: AuthMode = requestedMode === "sign_in" ? "sign_in" : "sign_up";
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +55,12 @@ export function AuthPage() {
       navigate(nextPath, { replace: true });
     }
   }, [session, navigate, nextPath]);
+
+  useEffect(() => {
+    if (requestedMode === "sign_in" || requestedMode === "sign_up") {
+      setMode(requestedMode);
+    }
+  }, [requestedMode]);
 
   const mutation = useMutation({
     mutationFn: async () => {

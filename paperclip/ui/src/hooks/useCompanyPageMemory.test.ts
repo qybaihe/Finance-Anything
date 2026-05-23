@@ -49,6 +49,16 @@ describe("getRememberedPathOwnerCompanyId", () => {
       }),
     ).toBe("pap");
   });
+
+  it("treats unprefixed finance routes as board routes instead of company prefixes", () => {
+    expect(
+      getRememberedPathOwnerCompanyId({
+        companies,
+        pathname: "/finance",
+        fallbackCompanyId: "pap",
+      }),
+    ).toBe("pap");
+  });
 });
 
 describe("sanitizeRememberedPathForCompany", () => {

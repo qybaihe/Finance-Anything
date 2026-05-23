@@ -39,12 +39,12 @@
 <!-- 首屏 CTA 区域 -->
 <div class="cta-group animate-in fade-up stagger-5">
     <!-- 修改 href 指向真实系统入口 -->
-    <a href="/login" class="btn btn-primary">
+    <a href="/auth?mode=sign_in&next=%2Ffinance" class="btn btn-primary">
         <span class="btn-text">开始决策</span>
         ...
     </a>
     <!-- 修改 href 指向真实注册页 -->
-    <a href="/signup" class="btn btn-secondary">创建账号</a>
+    <a href="/auth?mode=sign_up&next=%2Ffinance" class="btn btn-secondary">创建账号</a>
 </div>
 ```
 
